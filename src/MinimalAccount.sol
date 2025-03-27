@@ -8,6 +8,7 @@ import {MessageHashUtils} from "lib/openzeppelin-contracts/contracts/utils/crypt
 import {ECDSA} from "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
+import {console} from "forge-std/console.sol";
 
 contract MinimalAccount is IAccount, Ownable {
     ///// Errors /////
@@ -39,11 +40,15 @@ contract MinimalAccount is IAccount, Ownable {
     receive() external payable {}
 
     ///// External Functions /////
+    event ExecutionDetails(address dest, uint256 value, bytes functionData);
+
     function execute(
         address dest,
         uint256 value,
         bytes calldata functionData
-    ) external payable requireFromEntryPoint {
+    ) external payable requireFromEntryPointOrOwner {
+        emit ExecutionDetails(dest, value, functionData);
+
         (bool success, bytes memory result) = dest.call{value: value}(
             functionData
         );
